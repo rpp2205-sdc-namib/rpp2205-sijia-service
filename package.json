@@ -1,0 +1,22 @@
+{
+  "name": "rpp2205-sijia-service",
+  "version": "1.0.0",
+  "description": "backend service to provide database API for Atelier project",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rpp2205-sdc-namib/rpp2205-sijia-service.git"
+  },
+  "author": "Sijia Tao",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rpp2205-sdc-namib/rpp2205-sijia-service/issues"
+  },
+  "homepage": "https://github.com/rpp2205-sdc-namib/rpp2205-sijia-service#readme",
+  "devDependencies": {
+    "jest": "^29.3.1"
+  }
+}
