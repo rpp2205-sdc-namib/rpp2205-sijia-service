@@ -5,29 +5,42 @@ CREATE TABLE "user"(
 );
 
 CREATE TABLE product(
-  id SERIAL PRIMARY KEY,
-  product_id INTEGER NOT NULL
+  id INTEGER PRIMARY KEY,
+  review_ids INTEGER[]
 );
 
-
 CREATE TABLE review(
-  id SERIAL PRIMARY KEY,
+  id INTEGER PRIMARY KEY,
   rating INTEGER CONSTRAINT rating_value CHECK(rating = NULL OR (rating > 0 AND rating < 6)),
-  recommended BOOLEAN,
+  summary TEXT,
+  recommend VARCHAR(100),
+  body TEXT,
+  size INTEGER CONSTRAINT size_value CHECK(size = NULL OR (size > 0 AND size < 6)),
+  width INTEGER CONSTRAINT width_value CHECK(width = NULL OR (width > 0 AND width < 6)),
   fit INTEGER CONSTRAINT fit_value CHECK(fit = NULL OR (fit > 0 AND fit < 6)),
   "length" INTEGER CONSTRAINT length_value CHECK("length" = NULL OR ("length" > 0 AND "length" < 6)),
   comfort INTEGER CONSTRAINT comfort_value CHECK(comfort = NULL OR (comfort > 0 AND comfort < 6)),
   quality INTEGER CONSTRAINT quality_value CHECK(quality = NULL OR (quality > 0 AND quality < 6)),
-  headline TEXT,
-  written_review TEXT,
-  created_at TIMESTAMP,
-  reported BOOLEAN,
+  "date" TIMESTAMP,
+  reported VARCHAR(100),
   helpfulness INTEGER,
-  userid INTEGER,
+  user_id INTEGER,
   CONSTRAINT fk_user
-      FOREIGN KEY(userid)
+      FOREIGN KEY(user_id)
           REFERENCES "user"(id),
-  productid INTEGER,
-  CONSTRAINT fk_productid
-      FOREIGN KEY(productid)
-          REFERENCES "product"(id));
+  reviewer_name VARCHAR(100),
+  email VARCHAR(255),
+  product_id INTEGER,
+  -- CONSTRAINT fk_product
+  --     FOREIGN KEY(product_id)
+  --         REFERENCES "product"(id)
+  );
+
+CREATE TABLE photo(
+  id SERIAL PRIMARY KEY,
+  review_id INTEGER,
+  CONSTRAINT fk_photo
+      FOREIGN KEY(review_id)
+          REFERENCES "review"(id),
+  "url" VARCHAR(255)
+);
