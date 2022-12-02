@@ -9,6 +9,7 @@ const requestHandlers = require('./controllers/requestHandlers.js');
 
 app.use(bodyparser.json());
 
+app.get('/reviews')
 
 
 
