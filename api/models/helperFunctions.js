@@ -1,11 +1,11 @@
 module.exports = {
-  getReviewIds: (product_id) => {
+  getReviewIdsQuery: (product_id) => {
     return `SELECT review_ids
             FROM product
             WHERE id = ${product_id}`
   },
 
-  getReviews: (review_id) => {
+  getReviewsQuery: (review_id) => {
     return `WITH
     review AS (
       SELECT r.id AS review_id, r.rating, r.summary, r.recommend, r.response, r.body, r."date", r.reviewer_name, r.helpfulness,
@@ -20,7 +20,7 @@ module.exports = {
     WHERE review_id = ${review_id};`
   },
 
-  getMeta: (product_id) => {
+  getMetaQuery: (product_id) => {
     return `
     WITH
     review_target AS (
@@ -64,5 +64,20 @@ module.exports = {
     SELECT json_build_object('product_id', meta_ra.product_id, 'ratings', (select ratings from meta_ra), 'recommended', (select recommended from meta_re), 'characteristics', json_agg(meta_ch)->0)
     FROM meta_ra, meta_re, meta_ch
     GROUP BY meta_ra.product_id;`
+  },
+
+  handleCountAndSort: (arr, count, sort) => {
+    var sortby;
+    if (sort === 'newest') {
+      sortby = "date"
+    } else if (sort === 'helpful') {
+      sortby = "helpfulness"
+    } else {
+      sortby = "id"
+    };
+    arr.sort((a, b) => {
+      return (b[sortby] - a[sortby])
+    })
+    return arr.slice(0, count);
   }
 }

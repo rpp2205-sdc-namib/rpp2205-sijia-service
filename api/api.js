@@ -9,12 +9,14 @@ const requestHandlers = require('./controllers/requestHandlers.js');
 
 app.use(bodyparser.json());
 
-app.get('/reviews')
+app.get('/reviews', requestHandlers.getAllReviews);
 
-
+app.get('/reviews/meta', requestHandlers.getMetaReviews);
 
 app.listen(port, () => {
   console.log('Listening on port ' + port + '...');
 });
 
-client.connect();
+client.connect(() => {
+  console.log('Connected to Postgres.');
+});
