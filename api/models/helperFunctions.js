@@ -66,6 +66,18 @@ module.exports = {
     GROUP BY meta_ra.product_id;`
   },
 
+  postReviewQuery: (obj) => {
+
+  },
+
+  putQuery: (review_id, field) => {
+    if (field === 'helpful') {
+      return `UPDATE review SET helpfulness = helpfulness + 1 WHERE id = ${review_id}`;
+    } else if (field === 'reported') {
+      return `UPDATE review SET reported = 'true' WHERE id = ${review_id}`;
+    }
+  },
+
   handleCountAndSort: (arr, count, sort) => {
     var sortby;
     if (sort === 'newest') {

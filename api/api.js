@@ -13,6 +13,10 @@ app.get('/reviews', requestHandlers.getAllReviews);
 
 app.get('/reviews/meta', requestHandlers.getMetaReviews);
 
+app.put('/reviews/:review_id/helpful', requestHandlers.putHelpfulness);
+
+app.put('/reviews/:review_id/report', requestHandlers.putReported);
+
 app.listen(port, () => {
   console.log('Listening on port ' + port + '...');
 });

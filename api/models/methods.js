@@ -32,5 +32,27 @@ module.exports = {
       .catch(err => {
         callback(err);
       })
+  },
+
+  updateHelpfulness: (review_id, callback) => {
+    client.query(helper.putQuery(review_id, 'helpful'))
+      .then((res) => {
+        console.log('update helpflness', res)
+        callback(null, res);
+      })
+      .catch(err => {
+        callback(err);
+      })
+  },
+
+  updateReported: (review_id, callback) => {
+    client.query(helper.putQuery(review_id, 'reported'))
+      .then(res => {
+        console.log('update reported', res)
+        callback(null, res)
+      })
+      .catch(err => {
+        callback(err);
+      })
   }
 }

@@ -1,4 +1,4 @@
-const { getReviews, getMeta } = require('../models/methods');
+const { getReviews, getMeta, updateHelpfulness, updateReported } = require('../models/methods');
 
 module.exports = {
   getAllReviews: (req, res) => {
@@ -23,5 +23,29 @@ module.exports = {
         res.status(200).send(result);
       }
     })
+  },
+
+  putHelpfulness: (req, res) => {
+    var review_id = req.params.review_id;
+    updateHelpfulness(review_id, (err, result) => {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.status(204).send(result);
+      }
+    })
+  },
+
+  putReported: (req, res) => {
+    var review_id = req.params.review_id;
+    updateReported(review_id, (err, result) => {
+      if(err) {
+        res.status(500).send(err);
+      } else {
+        res.status(204).send(result);
+      }
+    })
+
+
   }
 }
