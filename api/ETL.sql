@@ -154,7 +154,6 @@ review AS (
  FROM review r
   LEFT JOIN photo p
   on r.id = p.review_id
-  GROUP BY r.id
 )
 SELECT json_agg(review)
 FROM review
