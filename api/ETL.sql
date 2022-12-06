@@ -48,6 +48,22 @@ CREATE TABLE characteristics_reviews_combined(
   "name" VARCHAR(100)
 );
 
+CREATE TABLE product_all(
+  id integer primary key,
+  "name" varchar(255),
+  slogan varchar(255),
+  "description" text,
+  category varchar(255),
+  default_price integer
+);
+
+COPY product_all(id, "name", slogan, "description", category, default_price)
+FROM '/Users/cts1988/Downloads/product.csv'
+DELIMITER ','
+CSV HEADER;
+
+
+
 -- Fit into the three tables from the schema
 INSERT INTO "user"(nickname, email)
 SELECT reviewer_name, reviewer_email FROM reviews_sample;
@@ -114,6 +130,7 @@ SET quality = characteristics_reviews_combined.value
 FROM characteristics_reviews_combined
 WHERE characteristics_reviews_combined.review_id = review.id AND characteristics_reviews_combined."name" = 'Quality';
 
+-- let product has an array of review_ids
 UPDATE product
 SET review_ids = c.arr
 FROM (
@@ -122,6 +139,11 @@ FROM (
   GROUP BY product_id
 ) c
 WHERE product.id = c.product_id;
+
+-- show all products including the ones with no reviews
+INSERT INTO all_product(id) SELECT id FROM product_all;
+UPDATE all_product SET review_ids = product.review_ids FROM product WHERE product.id = all_product.id;
+
 
 -- restart serial id
 ALTER SEQUENCE <table name>_id_seq RESTART;
@@ -160,6 +182,27 @@ SELECT json_agg(review)
 FROM review
 WHERE review_id = 2;
 
+-- do the same to photo table
+INSERT INTO review_photos(id) SELECT id FROM review;
+
+UPDATE review_photos
+SET photos = c.arr
+FROM (
+  SELECT review_id, array_agg(json_build_object('id', photo.id, 'url', photo.url)) AS arr
+  FROM photo
+  GROUP BY review_id
+) c
+WHERE review_photos.id = c.review_id;
+
+UPDATE product
+SET review_ids = c.arr
+FROM (
+  SELECT product_id, array_agg(id) AS arr
+  FROM review
+  GROUP BY product_id
+) c
+WHERE product.id = c.product_id;
+
 --get meta reviews
 WITH
 review_meta AS (
@@ -173,6 +216,12 @@ review_meta AS (
 )
 SELECT json_build_object('product_id', product_id, 'ratings', (select ratings from review_meta), 'recommended', (select recommended from review_meta))
 FROM review_meta;
+
+
+
+
+
+
 
 --improve meta reviews query
 --first, get a flattened product-review_id table, then use it to join the review table to get the data
@@ -227,3 +276,4 @@ GROUP BY meta_ra.product_id;
 -- https://bipp.io/sql-tutorial/postgresql/insert-data-into-an-array/
 
 UPDATE <table name> SET <column name> = array.append(<column name>, append item) WHERE <condition>;
+

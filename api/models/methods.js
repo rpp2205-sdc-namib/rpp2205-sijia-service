@@ -8,6 +8,7 @@ module.exports = {
     client.query(helper.getReviewIdsQuery(product_id))
       .then((res) => {
         var review_ids = res.rows[0].review_ids;
+        console.log('review ids are', review_ids, res.rows[0], res);
         var promises = [];
         review_ids.forEach(review_id => {
           promises.push(client.query(helper.getReviewsQuery(review_id)));
@@ -28,6 +29,16 @@ module.exports = {
     client.query(helper.getMetaQuery(product_id))
       .then(result => {
         callback(null, result.rows[0].json_build_object)
+      })
+      .catch(err => {
+        callback(err);
+      })
+  },
+
+  postReviewsToDB: (obj, callback) => {
+    client.query(helper.postQuery(obj))
+      .then(result => {
+        callback(null, result)
       })
       .catch(err => {
         callback(err);

@@ -13,6 +13,8 @@ app.get('/reviews', requestHandlers.getAllReviews);
 
 app.get('/reviews/meta', requestHandlers.getMetaReviews);
 
+app.post('/reviews', requestHandlers.postReviews);
+
 app.put('/reviews/:review_id/helpful', requestHandlers.putHelpfulness);
 
 app.put('/reviews/:review_id/report', requestHandlers.putReported);

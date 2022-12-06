@@ -1,7 +1,7 @@
 module.exports = {
   getReviewIdsQuery: (product_id) => {
     return `SELECT review_ids
-            FROM product
+            FROM all_product
             WHERE id = ${product_id}`
   },
 
@@ -9,11 +9,11 @@ module.exports = {
     return `WITH
     review AS (
       SELECT r.id AS review_id, r.rating, r.summary, r.recommend, r.response, r.body, r."date", r.reviewer_name, r.helpfulness,
-            json_agg(json_build_object('id', p.id, 'url', p."url")) AS photos
+            p.photos
       FROM review r
-      LEFT JOIN photo p
-      on r.id = p.review_id
-      GROUP BY r.id
+      LEFT JOIN review_photos p
+      on r.id = p.id
+      GROUP BY r.id, p.id
     )
     SELECT json_agg(review)
     FROM review
@@ -67,6 +67,13 @@ module.exports = {
   },
 
   postReviewQuery: (obj) => {
+    var { product_id, rating, summary, body, recommend, name, email, photos, characteristics } = obj;
+
+    return `DO $$
+    DECLARE current_review_id;
+    BEGIN
+    SELECT MAX(id) INTO current_review_id FROM review;
+    INSERT INTO review(id, product_id, rating, summary, body, recommend, reviewer_name, email) VALUES (current_review_id + 1, ${product_id}, ${rating}, ${summary}, ${body}, ${recommend}, ${name}, ${email})`
 
   },
 
