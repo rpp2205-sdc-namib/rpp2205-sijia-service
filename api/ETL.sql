@@ -140,10 +140,20 @@ FROM (
 ) c
 WHERE product.id = c.product_id;
 
+
 -- show all products including the ones with no reviews
 INSERT INTO all_product(id) SELECT id FROM product_all;
 UPDATE all_product SET review_ids = product.review_ids FROM product WHERE product.id = all_product.id;
 
+-- let product has an array of characteristics
+UPDATE all_product
+SET characteristics = c.obj
+FROM (
+  SELECT product_id, json_object_agg("name", id) AS obj
+  FROM characteristics_sample
+  GROUP BY product_id
+) c
+WHERE all_product.id = c.product_id;
 
 -- restart serial id
 ALTER SEQUENCE <table name>_id_seq RESTART;

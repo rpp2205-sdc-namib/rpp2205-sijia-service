@@ -7,7 +7,7 @@ CREATE TABLE "user"(
 
 CREATE TABLE product(
   id INTEGER PRIMARY KEY,
-  review_ids INTEGER[]
+  review_ids INTEGER[],
 );
 
 CREATE TABLE photo(
@@ -22,7 +22,8 @@ CREATE TABLE photo(
 -- schema No.1
 CREATE TABLE all_product(
   id INTEGER PRIMARY KEY,
-  review_ids INTEGER[]
+  review_ids INTEGER[],
+  characteristics json
 );
 
 -- schema No.2

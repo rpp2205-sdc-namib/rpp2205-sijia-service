@@ -7,8 +7,7 @@ module.exports = {
     })
     client.query(helper.getReviewIdsQuery(product_id))
       .then((res) => {
-        var review_ids = res.rows[0].review_ids;
-        console.log('review ids are', review_ids, res.rows[0], res);
+        var { review_ids } = res.rows[0];
         var promises = [];
         review_ids.forEach(review_id => {
           promises.push(client.query(helper.getReviewsQuery(review_id)));
@@ -16,7 +15,7 @@ module.exports = {
         Promise.all(promises)
            .then(arr => {
             arr = arr.map(element => element.rows[0].json_agg[0]);
-            var result = {product: product_id, page: 1, results: helper.handleCountAndSort(arr, count, sort)};
+            var result = {product: Number(product_id), page: 1, results: helper.handleCountAndSort(arr, count, sort)};
             callback(null, result)
            })
       })
@@ -26,9 +25,15 @@ module.exports = {
   },
 
   getMeta: (product_id, callback) => {
-    client.query(helper.getMetaQuery(product_id))
-      .then(result => {
-        callback(null, result.rows[0].json_build_object)
+    var meta_promises = [client.query(helper.getCharacteristicsQuery(product_id)), client.query(helper.getMetaQuery(product_id))];
+    Promise.all(meta_promises)
+      .then(arr => {
+        var result = arr[1].rows[0].json_build_object;
+        var charas = arr[0].rows[0].characteristics;
+        for (var key of Object.keys(charas)) {
+          result.characteristics[key.toLowerCase()].id = charas[key];
+        }
+        callback(null, result)
       })
       .catch(err => {
         callback(err);
@@ -48,7 +53,6 @@ module.exports = {
   updateHelpfulness: (review_id, callback) => {
     client.query(helper.putQuery(review_id, 'helpful'))
       .then((res) => {
-        console.log('update helpflness', res)
         callback(null, res);
       })
       .catch(err => {

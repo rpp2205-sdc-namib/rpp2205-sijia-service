@@ -15,7 +15,7 @@ module.exports = {
   },
 
   getMetaReviews: (req, res) => {
-    var product_id = req.query.product_id;
+    var product_id = req.query?.product_id; //? - handle query undefined situation in getMeta instead
     getMeta(product_id, (err, result) => {
       if (err) {
         res.status(500).send(err);

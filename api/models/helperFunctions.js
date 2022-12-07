@@ -20,6 +20,12 @@ module.exports = {
     WHERE review_id = ${review_id};`
   },
 
+  getCharacteristicsQuery: (product_id) => {
+    return `SELECT characteristics
+    FROM all_product
+    WHERE id = ${product_id}`
+  },
+
   getMetaQuery: (product_id) => {
     return `
     WITH
@@ -30,7 +36,7 @@ module.exports = {
         FROM review
         INNER JOIN (
           SELECT id, unnest(review_ids) AS review_id
-          FROM product
+          FROM all_product
           WHERE id = ${product_id}
         ) f ON review.id = f.review_id
         GROUP BY review.id
