@@ -41,7 +41,7 @@ module.exports = {
   },
 
   postReviewsToDB: (obj, callback) => {
-    client.query(helper.postQuery(obj))
+    client.query(helper.postReviewQuery(obj))
       .then(result => {
         callback(null, result)
       })

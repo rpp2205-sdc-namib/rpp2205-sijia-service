@@ -287,3 +287,36 @@ GROUP BY meta_ra.product_id;
 
 UPDATE <table name> SET <column name> = array.append(<column name>, append item) WHERE <condition>;
 
+
+DO $$
+    DECLARE current_review_id INTEGER;
+            photo_arr VARCHAR[] = array['http1', 'http2'];
+            p VARCHAR;
+            photoid INTEGER;
+    BEGIN
+      SELECT MAX(id) INTO current_review_id FROM review;
+      INSERT INTO review(id, product_id, rating, summary, body, recommend, reviewer_name, email) VALUES (current_review_id + 1, 5, 4, 'this is a test summary', 'this is a test bory', 'true', 'haha123', 'haha123@mail.com');
+      INSERT INTO review_photos(id) VALUES (current_review_id + 1);
+      UPDATE all_product SET review_ids = array_append(review_ids, current_review_id) WHERE id = 5;
+      FOREACH p IN ARRAY photo_arr
+      LOOP
+        SELECT MAX(id) INTO photoid FROM photo;
+        INSERT INTO photo(id, review_id, "url") VALUES (photoid + 1, current_review_id + 1, p);
+        UPDATE review_photos SET photos = array_append(photos, ('{"id": "'|| photoid + 1 || '", "url": "' || p || '"}')::json) WHERE id = current_review_id + 1;
+      END LOOP;
+END $$;
+
+DO $$
+    DECLARE current_review_id INTEGER;
+            photo_arr VARCHAR[] = array['http1', 'http2'];
+            p VARCHAR;
+            photoid INTEGER;
+    BEGIN
+      SELECT MAX(id) INTO current_review_id FROM review;
+      FOREACH p IN ARRAY photo_arr
+      LOOP
+        SELECT MAX(id) INTO photoid FROM photo;
+        INSERT INTO photo(id, review_id, "url") VALUES (photoid + 1, current_review_id + 1, p);
+        UPDATE review_photos SET photos = array_append(photos, ('{"id": "'|| photoid + 1 || '", "url": "' || p || '"}')::json) WHERE review_photos.id = current_review_id;
+      END LOOP;
+END $$;

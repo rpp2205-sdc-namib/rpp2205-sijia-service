@@ -72,15 +72,60 @@ module.exports = {
     GROUP BY meta_ra.product_id;`
   },
 
+  // {
+  //   product_id: 71697,
+  //   rating: 2,
+  //   summary: 'Not so good',
+  //   body: 'Not very satisfying',
+  //   recommend: true,
+  //   name: 'yiyi1234',
+  //   email: 'yiyi1234@mail.com',
+  //   photos: [
+  //   'http://res.cloudinary.com/dwcubhwiw/image/upload/v1670457820/jxhq1iafvg8czy2dqo2v.jpg'
+  //   ],
+  //   characteristics: { '240582': 2, '240583': 1, '240584': 1, '240585': 3 }
+  //   }
+
+//   DO $$
+//   DECLARE current_review_id INTEGER;
+//           photo_arr VARCHAR[] = array['http1', 'http2'];
+//           p VARCHAR;
+//           photoid INTEGER;
+//   BEGIN
+//     SELECT MAX(id) INTO current_review_id FROM review;
+//     INSERT INTO review(id, product_id, rating, summary, body, recommend, reviewer_name, email) VALUES (current_review_id + 1, 5, 4, 'this is a test summary', 'this is a test bory', 'true', 'haha123', 'haha123@mail.com');
+//     INSERT INTO review_photos(id) VALUES (current_review_id + 1);
+//     UPDATE all_product SET review_ids = array_append(review_ids, current_review_id) WHERE id = 5;
+//     FOREACH p IN ARRAY photo_arr
+//     LOOP
+//       SELECT MAX(id) INTO photoid FROM photo;
+//       INSERT INTO photo(id, review_id, "url") VALUES (photoid + 1, current_review_id + 1, p);
+//       UPDATE review_photos SET photos = array_append(photos, ('{"id": "'|| photoid + 1 || '", "url": "' || p || '"}')::json) WHERE id = current_review_id + 1;
+//     END LOOP;
+// END $$;
+
   postReviewQuery: (obj) => {
-    var { product_id, rating, summary, body, recommend, name, email, photos, characteristics } = obj;
-
-    return `DO $$
-    DECLARE current_review_id;
+    //insert into schema review and schema photo
+    var { product_id, rating, summary, body, recommend, name, email, characteristics, photos } = obj;
+    var q =
+    `DO $$
+    DECLARE current_review_id INTEGER;
+            photo_arr VARCHAR[] = array${photos};
+            p VARCHAR;
+            photoid INTEGER;
     BEGIN
-    SELECT MAX(id) INTO current_review_id FROM review;
-    INSERT INTO review(id, product_id, rating, summary, body, recommend, reviewer_name, email) VALUES (current_review_id + 1, ${product_id}, ${rating}, ${summary}, ${body}, ${recommend}, ${name}, ${email})`
-
+      SELECT MAX(id) INTO current_review_id FROM review;
+      INSERT INTO review(id, product_id, rating, summary, body, recommend, reviewer_name, email) VALUES (current_review_id + 1, ${product_id}, ${rating}, '${summary}', '${body}', '${recommend}', '${name}', '${email}');
+      INSERT INTO review_photos(id) VALUES (current_review_id + 1);
+      UPDATE all_product SET review_ids = array_append(review_ids, current_review_id) WHERE id = ${product_id};
+      FOREACH p IN ARRAY photo_arr
+        LOOP
+          SELECT MAX(id) INTO photoid FROM photo;
+          INSERT INTO photo(id, review_id, "url") VALUES (photoid + 1, current_review_id + 1, p);
+          UPDATE review_photos SET photos = array_append(photos, ('{"id": "'|| photoid + 1 || '", "url": "' || p || '"}')::json) WHERE id = current_review_id + 1;
+        END LOOP;
+    END $$;`
+    return q;
   },
 
   putQuery: (review_id, field) => {

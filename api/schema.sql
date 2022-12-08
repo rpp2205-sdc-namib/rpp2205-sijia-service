@@ -10,15 +10,6 @@ CREATE TABLE product(
   review_ids INTEGER[],
 );
 
-CREATE TABLE photo(
-  id SERIAL PRIMARY KEY,
-  review_id INTEGER,
-  CONSTRAINT fk_photo
-      FOREIGN KEY(review_id)
-          REFERENCES "review"(id),
-  "url" VARCHAR(255)
-);
-
 -- schema No.1
 CREATE TABLE all_product(
   id INTEGER PRIMARY KEY,
@@ -33,6 +24,13 @@ CREATE TABLE review_photos(
 );
 
 -- schema No.3
+CREATE TABLE photo(
+  id SERIAL PRIMARY KEY,
+  review_id INTEGER,
+  "url" VARCHAR(255)
+);
+
+-- schema No.4
 CREATE TABLE review(
   id INTEGER PRIMARY KEY,
   rating INTEGER CONSTRAINT rating_value CHECK(rating = NULL OR (rating > 0 AND rating < 6)),
