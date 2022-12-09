@@ -8,6 +8,7 @@ const bodyparser = require('body-parser');
 const requestHandlers = require('./controllers/requestHandlers.js');
 
 app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({extended:false}));
 
 app.get('/reviews', requestHandlers.getAllReviews);
 

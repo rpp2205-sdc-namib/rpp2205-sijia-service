@@ -149,7 +149,7 @@ UPDATE all_product SET review_ids = product.review_ids FROM product WHERE produc
 UPDATE all_product
 SET characteristics = c.obj
 FROM (
-  SELECT product_id, json_object_agg("name", id) AS obj
+  SELECT product_id, json_object_agg(id, "name") AS obj
   FROM characteristics_sample
   GROUP BY product_id
 ) c

@@ -27,7 +27,7 @@ module.exports = {
   },
 
   getMetaQuery: (product_id) => {
-    return `
+    var q = `
     WITH
     review_target AS (
       SELECT *
@@ -70,6 +70,8 @@ module.exports = {
     SELECT json_build_object('product_id', meta_ra.product_id, 'ratings', (select ratings from meta_ra), 'recommended', (select recommended from meta_re), 'characteristics', json_agg(meta_ch)->0)
     FROM meta_ra, meta_re, meta_ch
     GROUP BY meta_ra.product_id;`
+    console.log(q);
+    return q;
   },
 
   // {
@@ -104,20 +106,29 @@ module.exports = {
 //     END LOOP;
 // END $$;
 
-  postReviewQuery: (obj) => {
+  postReviewQuery: (obj, characteristics) => {
     //insert into schema review and schema photo
-    var { product_id, rating, summary, body, recommend, name, email, characteristics, photos } = obj;
+    var { product_id, rating, summary, body, recommend, name, email, photos } = obj;
+    var characteristics_arr = Object.keys(characteristics);
     var q =
     `DO $$
     DECLARE current_review_id INTEGER;
-            photo_arr VARCHAR[] = array${photos};
+            photo_arr VARCHAR[] = ARRAY['${photos}'];
+            characteristics_arr VARCHAR[] = ARRAY['size', 'fit', 'length', 'comfort', 'quality', 'width'];
+            characteristics_obj JSON;
             p VARCHAR;
             photoid INTEGER;
+            cid VARCHAR;
     BEGIN
       SELECT MAX(id) INTO current_review_id FROM review;
+      SELECT characteristics INTO characteristics_obj FROM all_product WHERE id = ${product_id};
       INSERT INTO review(id, product_id, rating, summary, body, recommend, reviewer_name, email) VALUES (current_review_id + 1, ${product_id}, ${rating}, '${summary}', '${body}', '${recommend}', '${name}', '${email}');
+      FOREACH cid IN ARRAY characteristics_arr
+        LOOP
+        EXECUTE format('UPDATE review SET %I = $1 WHERE id = $2', cid) USING CAST('${JSON.stringify(characteristics)}'::json->>cid AS INTEGER), current_review_id + 1;
+        END LOOP;
       INSERT INTO review_photos(id) VALUES (current_review_id + 1);
-      UPDATE all_product SET review_ids = array_append(review_ids, current_review_id) WHERE id = ${product_id};
+      UPDATE all_product SET review_ids = array_append(review_ids, current_review_id + 1) WHERE id = ${product_id};
       FOREACH p IN ARRAY photo_arr
         LOOP
           SELECT MAX(id) INTO photoid FROM photo;

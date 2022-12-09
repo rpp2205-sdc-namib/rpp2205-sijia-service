@@ -31,7 +31,8 @@ module.exports = {
         var result = arr[1].rows[0].json_build_object;
         var charas = arr[0].rows[0].characteristics;
         for (var key of Object.keys(charas)) {
-          result.characteristics[key.toLowerCase()].id = charas[key];
+          var value = charas[key];
+          result.characteristics[value.toLowerCase()].id = key;
         }
         callback(null, result)
       })
@@ -41,13 +42,25 @@ module.exports = {
   },
 
   postReviewsToDB: (obj, callback) => {
-    client.query(helper.postReviewQuery(obj))
+    client.query(helper.getCharacteristicsQuery(obj.product_id))
       .then(result => {
-        callback(null, result)
-      })
+        var character_mapping = result.rows[0].characteristics;
+        var characteristics_sum = {};
+        var characteristics_obj = obj.characteristics;
+        for (var key in characteristics_obj) {
+          if (key) {
+            characteristics_sum[character_mapping[key].toLowerCase()] = obj.characteristics[key]
+          }
+        };
+        client.query(helper.postReviewQuery(obj, characteristics_sum))
+          .then(result => {
+            callback(null, result)
+          })
       .catch(err => {
         callback(err);
       })
+      })
+
   },
 
   updateHelpfulness: (review_id, callback) => {
