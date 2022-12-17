@@ -48,6 +48,22 @@ CREATE TABLE characteristics_reviews_combined(
   "name" VARCHAR(100)
 );
 
+CREATE TABLE product_all(
+  id integer primary key,
+  "name" varchar(255),
+  slogan varchar(255),
+  "description" text,
+  category varchar(255),
+  default_price integer
+);
+
+COPY product_all(id, "name", slogan, "description", category, default_price)
+FROM '/Users/cts1988/Downloads/product.csv'
+DELIMITER ','
+CSV HEADER;
+
+
+
 -- Fit into the three tables from the schema
 INSERT INTO "user"(nickname, email)
 SELECT reviewer_name, reviewer_email FROM reviews_sample;
@@ -114,6 +130,7 @@ SET quality = characteristics_reviews_combined.value
 FROM characteristics_reviews_combined
 WHERE characteristics_reviews_combined.review_id = review.id AND characteristics_reviews_combined."name" = 'Quality';
 
+-- let product has an array of review_ids
 UPDATE product
 SET review_ids = c.arr
 FROM (
@@ -122,6 +139,21 @@ FROM (
   GROUP BY product_id
 ) c
 WHERE product.id = c.product_id;
+
+
+-- show all products including the ones with no reviews
+INSERT INTO all_product(id) SELECT id FROM product_all;
+UPDATE all_product SET review_ids = product.review_ids FROM product WHERE product.id = all_product.id;
+
+-- let product has an array of characteristics
+UPDATE all_product
+SET characteristics = c.obj
+FROM (
+  SELECT product_id, json_object_agg(id, "name") AS obj
+  FROM characteristics_sample
+  GROUP BY product_id
+) c
+WHERE all_product.id = c.product_id;
 
 -- restart serial id
 ALTER SEQUENCE <table name>_id_seq RESTART;
@@ -154,10 +186,32 @@ review AS (
  FROM review r
   LEFT JOIN photo p
   on r.id = p.review_id
+  GROUP BY r.id
 )
 SELECT json_agg(review)
 FROM review
 WHERE review_id = 2;
+
+-- do the same to photo table
+INSERT INTO review_photos(id) SELECT id FROM review;
+
+UPDATE review_photos
+SET photos = c.arr
+FROM (
+  SELECT review_id, array_agg(json_build_object('id', photo.id, 'url', photo.url)) AS arr
+  FROM photo
+  GROUP BY review_id
+) c
+WHERE review_photos.id = c.review_id;
+
+UPDATE product
+SET review_ids = c.arr
+FROM (
+  SELECT product_id, array_agg(id) AS arr
+  FROM review
+  GROUP BY product_id
+) c
+WHERE product.id = c.product_id;
 
 --get meta reviews
 WITH
@@ -172,6 +226,12 @@ review_meta AS (
 )
 SELECT json_build_object('product_id', product_id, 'ratings', (select ratings from review_meta), 'recommended', (select recommended from review_meta))
 FROM review_meta;
+
+
+
+
+
+
 
 --improve meta reviews query
 --first, get a flattened product-review_id table, then use it to join the review table to get the data
@@ -226,3 +286,37 @@ GROUP BY meta_ra.product_id;
 -- https://bipp.io/sql-tutorial/postgresql/insert-data-into-an-array/
 
 UPDATE <table name> SET <column name> = array.append(<column name>, append item) WHERE <condition>;
+
+
+DO $$
+    DECLARE current_review_id INTEGER;
+            photo_arr VARCHAR[] = array['http1', 'http2'];
+            p VARCHAR;
+            photoid INTEGER;
+    BEGIN
+      SELECT MAX(id) INTO current_review_id FROM review;
+      INSERT INTO review(id, product_id, rating, summary, body, recommend, reviewer_name, email) VALUES (current_review_id + 1, 5, 4, 'this is a test summary', 'this is a test bory', 'true', 'haha123', 'haha123@mail.com');
+      INSERT INTO review_photos(id) VALUES (current_review_id + 1);
+      UPDATE all_product SET review_ids = array_append(review_ids, current_review_id) WHERE id = 5;
+      FOREACH p IN ARRAY photo_arr
+      LOOP
+        SELECT MAX(id) INTO photoid FROM photo;
+        INSERT INTO photo(id, review_id, "url") VALUES (photoid + 1, current_review_id + 1, p);
+        UPDATE review_photos SET photos = array_append(photos, ('{"id": "'|| photoid + 1 || '", "url": "' || p || '"}')::json) WHERE id = current_review_id + 1;
+      END LOOP;
+END $$;
+
+DO $$
+    DECLARE current_review_id INTEGER;
+            photo_arr VARCHAR[] = array['http1', 'http2'];
+            p VARCHAR;
+            photoid INTEGER;
+    BEGIN
+      SELECT MAX(id) INTO current_review_id FROM review;
+      FOREACH p IN ARRAY photo_arr
+      LOOP
+        SELECT MAX(id) INTO photoid FROM photo;
+        INSERT INTO photo(id, review_id, "url") VALUES (photoid + 1, current_review_id + 1, p);
+        UPDATE review_photos SET photos = array_append(photos, ('{"id": "'|| photoid + 1 || '", "url": "' || p || '"}')::json) WHERE review_photos.id = current_review_id;
+      END LOOP;
+END $$;

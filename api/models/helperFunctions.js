@@ -1,7 +1,7 @@
 module.exports = {
   getReviewIdsQuery: (product_id) => {
     return `SELECT review_ids
-            FROM product
+            FROM all_product
             WHERE id = ${product_id}`
   },
 
@@ -9,19 +9,25 @@ module.exports = {
     return `WITH
     review AS (
       SELECT r.id AS review_id, r.rating, r.summary, r.recommend, r.response, r.body, r."date", r.reviewer_name, r.helpfulness,
-            json_agg(json_build_object('id', p.id, 'url', p."url")) AS photos
+            p.photos
       FROM review r
-      LEFT JOIN photo p
-      on r.id = p.review_id
-      GROUP BY r.id
+      LEFT JOIN review_photos p
+      on r.id = p.id
+      GROUP BY r.id, p.id
     )
     SELECT json_agg(review)
     FROM review
     WHERE review_id = ${review_id};`
   },
 
+  getCharacteristicsQuery: (product_id) => {
+    return `SELECT characteristics
+    FROM all_product
+    WHERE id = ${product_id}`
+  },
+
   getMetaQuery: (product_id) => {
-    return `
+    var q = `
     WITH
     review_target AS (
       SELECT *
@@ -30,7 +36,7 @@ module.exports = {
         FROM review
         INNER JOIN (
           SELECT id, unnest(review_ids) AS review_id
-          FROM product
+          FROM all_product
           WHERE id = ${product_id}
         ) f ON review.id = f.review_id
         GROUP BY review.id
@@ -64,6 +70,62 @@ module.exports = {
     SELECT json_build_object('product_id', meta_ra.product_id, 'ratings', (select ratings from meta_ra), 'recommended', (select recommended from meta_re), 'characteristics', json_agg(meta_ch)->0)
     FROM meta_ra, meta_re, meta_ch
     GROUP BY meta_ra.product_id;`
+    return q;
+  },
+
+  // {
+  //   product_id: 71697,
+  //   rating: 2,
+  //   summary: 'Not so good',
+  //   body: 'Not very satisfying',
+  //   recommend: true,
+  //   name: 'yiyi1234',
+  //   email: 'yiyi1234@mail.com',
+  //   photos: [
+  //   'http://res.cloudinary.com/dwcubhwiw/image/upload/v1670457820/jxhq1iafvg8czy2dqo2v.jpg'
+  //   ],
+  //   characteristics: { '240582': 2, '240583': 1, '240584': 1, '240585': 3 }
+  //   }
+
+  postReviewQuery: (obj, characteristics) => {
+    //insert into schema review and schema photo
+    var { product_id, rating, summary, body, recommend, name, email, photos } = obj;
+    var characteristics_arr = Object.keys(characteristics);
+    var q =
+    `DO $$
+    DECLARE current_review_id INTEGER;
+            photo_arr VARCHAR[] = ARRAY['${photos}'];
+            characteristics_arr VARCHAR[] = ARRAY['size', 'fit', 'length', 'comfort', 'quality', 'width'];
+            characteristics_obj JSON;
+            p VARCHAR;
+            photoid INTEGER;
+            cid VARCHAR;
+    BEGIN
+      SELECT MAX(id) INTO current_review_id FROM review;
+      SELECT characteristics INTO characteristics_obj FROM all_product WHERE id = ${product_id};
+      INSERT INTO review(id, product_id, rating, summary, body, recommend, reviewer_name, email) VALUES (current_review_id + 1, ${product_id}, ${rating}, '${summary}', '${body}', '${recommend}', '${name}', '${email}');
+      FOREACH cid IN ARRAY characteristics_arr
+        LOOP
+        EXECUTE format('UPDATE review SET %I = $1 WHERE id = $2', cid) USING CAST('${JSON.stringify(characteristics)}'::json->>cid AS INTEGER), current_review_id + 1;
+        END LOOP;
+      INSERT INTO review_photos(id) VALUES (current_review_id + 1);
+      UPDATE all_product SET review_ids = array_append(review_ids, current_review_id + 1) WHERE id = ${product_id};
+      FOREACH p IN ARRAY photo_arr
+        LOOP
+          SELECT MAX(id) INTO photoid FROM photo;
+          INSERT INTO photo(id, review_id, "url") VALUES (photoid + 1, current_review_id + 1, p);
+          UPDATE review_photos SET photos = array_append(photos, ('{"id": "'|| photoid + 1 || '", "url": "' || p || '"}')::json) WHERE id = current_review_id + 1;
+        END LOOP;
+    END $$;`
+    return q;
+  },
+
+  putQuery: (review_id, field) => {
+    if (field === 'helpful') {
+      return `UPDATE review SET helpfulness = helpfulness + 1 WHERE id = ${review_id}`;
+    } else if (field === 'reported') {
+      return `UPDATE review SET reported = 'true' WHERE id = ${review_id}`;
+    }
   },
 
   handleCountAndSort: (arr, count, sort) => {

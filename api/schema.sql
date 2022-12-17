@@ -1,3 +1,4 @@
+-- user table is no use
 CREATE TABLE "user"(
   id SERIAL PRIMARY KEY,
   nickname VARCHAR(100),
@@ -6,9 +7,30 @@ CREATE TABLE "user"(
 
 CREATE TABLE product(
   id INTEGER PRIMARY KEY,
-  review_ids INTEGER[]
+  review_ids INTEGER[],
 );
 
+-- schema No.1
+CREATE TABLE all_product(
+  id INTEGER PRIMARY KEY,
+  review_ids INTEGER[],
+  characteristics json
+);
+
+-- schema No.2
+CREATE TABLE review_photos(
+  id INTEGER PRIMARY KEY,
+  photos json[]
+);
+
+-- schema No.3
+CREATE TABLE photo(
+  id SERIAL PRIMARY KEY,
+  review_id INTEGER,
+  "url" VARCHAR(255)
+);
+
+-- schema No.4
 CREATE TABLE review(
   id INTEGER PRIMARY KEY,
   rating INTEGER CONSTRAINT rating_value CHECK(rating = NULL OR (rating > 0 AND rating < 6)),
@@ -25,9 +47,6 @@ CREATE TABLE review(
   reported VARCHAR(100),
   helpfulness INTEGER,
   user_id INTEGER,
-  CONSTRAINT fk_user
-      FOREIGN KEY(user_id)
-          REFERENCES "user"(id),
   reviewer_name VARCHAR(100),
   email VARCHAR(255),
   product_id INTEGER,
@@ -36,11 +55,3 @@ CREATE TABLE review(
   --         REFERENCES "product"(id)
   );
 
-CREATE TABLE photo(
-  id SERIAL PRIMARY KEY,
-  review_id INTEGER,
-  CONSTRAINT fk_photo
-      FOREIGN KEY(review_id)
-          REFERENCES "review"(id),
-  "url" VARCHAR(255)
-);
