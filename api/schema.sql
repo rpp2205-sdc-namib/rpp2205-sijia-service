@@ -47,9 +47,6 @@ CREATE TABLE review(
   reported VARCHAR(100),
   helpfulness INTEGER,
   user_id INTEGER,
-  CONSTRAINT fk_user
-      FOREIGN KEY(user_id)
-          REFERENCES "user"(id),
   reviewer_name VARCHAR(100),
   email VARCHAR(255),
   product_id INTEGER,

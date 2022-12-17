@@ -3,21 +3,25 @@ const helper = require('./helperFunctions.js');
 
 module.exports = {
   getReviews: (product_id, count, sort, callback) => {
-    client.query("select * from product where id = 2").then(res => {
-    })
     client.query(helper.getReviewIdsQuery(product_id))
       .then((res) => {
         var { review_ids } = res.rows[0];
-        var promises = [];
-        review_ids.forEach(review_id => {
-          promises.push(client.query(helper.getReviewsQuery(review_id)));
-        });
-        Promise.all(promises)
-           .then(arr => {
-            arr = arr.map(element => element.rows[0].json_agg[0]);
-            var result = {product: Number(product_id), page: 1, results: helper.handleCountAndSort(arr, count, sort)};
-            callback(null, result)
-           })
+        console.log('11', review_ids)
+        if (!review_ids) {
+          var result = {product: Number(product_id), page: 1, results: []}
+          callback(null, result);
+        } else {
+          var promises = [];
+          review_ids.forEach(review_id => {
+            promises.push(client.query(helper.getReviewsQuery(review_id)));
+          });
+          Promise.all(promises)
+            .then(arr => {
+              arr = arr.map(element => element.rows[0].json_agg[0]);
+              var result = {product: Number(product_id), page: 1, results: helper.handleCountAndSort(arr, count, sort)};
+              callback(null, result)
+            })
+        }
       })
       .catch(err => {
         callback(err);
@@ -25,19 +29,30 @@ module.exports = {
   },
 
   getMeta: (product_id, callback) => {
-    var meta_promises = [client.query(helper.getCharacteristicsQuery(product_id)), client.query(helper.getMetaQuery(product_id))];
-    Promise.all(meta_promises)
-      .then(arr => {
-        var result = arr[1].rows[0].json_build_object;
-        var charas = arr[0].rows[0].characteristics;
-        for (var key of Object.keys(charas)) {
-          var value = charas[key];
-          result.characteristics[value.toLowerCase()].id = key;
+    client.query(helper.getReviewIdsQuery(product_id))
+      .then(res => {
+        var { review_ids } = res.rows[0];
+        if (!review_ids) {
+          var result = {
+            product_id: Number(product_id), ratings: {}, recommended: {},
+            characteristics: {size: {value: null}, width: {value: null}, fit: {value: null}, length: {value: null}, comfort: {value: null}, quality: {value: null}}};
+            callback(null, result);
+        } else{
+          var meta_promises = [client.query(helper.getCharacteristicsQuery(product_id)), client.query(helper.getMetaQuery(product_id))];
+          Promise.all(meta_promises)
+            .then(arr => {
+              var result = arr[1].rows[0].json_build_object;
+              var charas = arr[0].rows[0].characteristics;
+              for (var key of Object.keys(charas)) {
+                var value = charas[key];
+                result.characteristics[value.toLowerCase()].id = key;
+              }
+              callback(null, result)
+            })
+            .catch(err => {
+              callback(err);
+            })
         }
-        callback(null, result)
-      })
-      .catch(err => {
-        callback(err);
       })
   },
 
