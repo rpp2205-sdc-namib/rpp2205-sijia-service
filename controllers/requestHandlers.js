@@ -40,7 +40,6 @@ module.exports = {
   //   }
 
   postReviews: (req, res) => {
-    console.log(req.body, req.body.characteristics, typeof req.body.characteristics)
     postReviewsToDB(req.body, (err, result) => {
       if (err) {
         res.status(500).send(err);

@@ -6,7 +6,6 @@ module.exports = {
     client.query(helper.getReviewIdsQuery(product_id))
       .then((res) => {
         var { review_ids } = res.rows[0];
-        console.log('11', review_ids)
         if (!review_ids) {
           var result = {product: Number(product_id), page: 1, results: []}
           callback(null, result);
@@ -91,7 +90,6 @@ module.exports = {
   updateReported: (review_id, callback) => {
     client.query(helper.putQuery(review_id, 'reported'))
       .then(res => {
-        console.log('update reported', res)
         callback(null, res)
       })
       .catch(err => {

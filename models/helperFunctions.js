@@ -6,7 +6,8 @@ module.exports = {
   },
 
   getReviewsQuery: (review_id) => {
-    return `WITH
+    return `
+    WITH
     review AS (
       SELECT r.id AS review_id, r.rating, r.summary, r.recommend, r.response, r.body, r."date", r.reviewer_name, r.helpfulness,
             p.photos
@@ -21,7 +22,8 @@ module.exports = {
   },
 
   getCharacteristicsQuery: (product_id) => {
-    return `SELECT characteristics
+    return `
+    SELECT characteristics
     FROM all_product
     WHERE id = ${product_id}`
   },

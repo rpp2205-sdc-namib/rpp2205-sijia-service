@@ -32,9 +32,9 @@ export const options = {
   //     maxVUs: 50,
   //   },
   // }
-  vus: 5,
-  duration: '2m',
-  target: 1000,
+  vus: 500,
+  duration: '20s',
+  target: 100,
   thresholds: {
     http_req_duration: ['max<2000'],
     http_req_failed: ['rate<.01'],
@@ -55,7 +55,7 @@ export const options = {
 
 export default function () {
   const BASE_URL = 'http://localhost:3300/reviews'; // make sure this is not production
-  var randomProductId = Math.floor(Math.random() * 1000011) + 1;
+  var randomProductId = Math.floor(Math.random() * 100000) + 1;
   const responses = http.batch([
     ['GET', `${BASE_URL}/?count=15&sort=helpful&product_id=${randomProductId}`]
   ]);
