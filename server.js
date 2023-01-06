@@ -7,13 +7,9 @@ dotenv.config();
 const port = process.env.PORT_API || 3300;
 const bodyparser = require('body-parser');
 const requestHandlers = require('./controllers/requestHandlers.js');
-// var cache = require('./cache-middleware');
-// var cacheConfig = require('./cache.json');
 
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended:false}));
-
-// app.use(cache(cacheConfig));
 
 app.use(express.static('public'));
 

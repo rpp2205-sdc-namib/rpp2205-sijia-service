@@ -1,17 +1,26 @@
 const { getReviews, getMeta, updateHelpfulness, updateReported, postReviewsToDB } = require('../models/methods');
+const TTLCache = require('@isaacs/ttlcache');
+const cache = new TTLCache({ max: 60000, ttl: 60000 });
 
 module.exports = {
   getAllReviews: (req, res) => {
     var product_id = req.query.product_id;
     var count = req.query.count || 5;
     var sort = req.query.sort;
-    getReviews(product_id, count, sort, (err, result) => {
-      if (err) {
-        res.status(500).send(err)
-      } else {
-        res.status(200).send(result);
-      }
-    })
+    if (cache.has(product_id)) {
+      console.log('use cached result', product_id);
+      var result = cache.get(product_id);
+      res.status(200).send(result);
+    } else {
+      getReviews(product_id, count, sort, (err, result) => {
+        if (err) {
+          res.status(500).send(err)
+        } else {
+          cache.set(product_id, result);
+          res.status(200).send(result);
+        }
+      })
+    }
   },
 
   getMetaReviews: (req, res) => {

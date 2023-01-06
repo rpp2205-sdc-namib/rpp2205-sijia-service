@@ -55,7 +55,7 @@ export const options = {
 
 export default function () {
   const BASE_URL = 'http://localhost:3300/reviews'; // make sure this is not production
-  var randomProductId = Math.floor(Math.random() * 100000) + 1;
+  var randomProductId = Math.floor(Math.random() * 100) + 1;
   const responses = http.batch([
     ['GET', `${BASE_URL}/?count=15&sort=helpful&product_id=${randomProductId}`]
   ]);
