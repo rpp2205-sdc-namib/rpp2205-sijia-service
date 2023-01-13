@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest ----coverage",
-    "server_api": "npx nodemon ./api/api.js"
+    "server_api": "npx nodemon ./server.js",
+    "new-relic": "node -r newrelic ./server.js"
   },
   "repository": {
     "type": "git",
@@ -21,7 +22,7 @@
     "moduleFileExtensions": [
       "js",
       "json"
-      ],
+    ],
     "coverageReporters": [
       "text"
     ],
@@ -29,16 +30,18 @@
     "collectCoverageFrom": [
       "**/*.js"
     ]
- },
+  },
   "homepage": "https://github.com/rpp2205-sdc-namib/rpp2205-sijia-service#readme",
   "devDependencies": {
     "jest": "^29.3.1"
   },
   "dependencies": {
+    "@isaacs/ttlcache": "^1.2.1",
     "axios": "^1.2.0",
     "body-parser": "^1.20.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "newrelic": "^9.7.5",
     "pg": "^8.8.0"
   }
 }
